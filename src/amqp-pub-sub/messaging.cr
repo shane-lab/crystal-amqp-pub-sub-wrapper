@@ -2,8 +2,8 @@ require "amqp"
 
 require "./disposable"
 
-AMQP_PREFIX = ENV["AMQP_PREFIX"] ||= nil
-AMQP_PREFIX = AMQP_PREFIX ? "#{AMQP_PREFIX}." : ""
+ENV["AMQP_PREFIX"] = ENV["AMQP_PREFIX"] ||= nil
+AMQP_PREFIX = ENV["AMQP_PREFIX"] ? "#{ENV["AMQP_PREFIX"]}." : ""
 
 module Messaging
     @@disposables = Set(Disposable).new
@@ -13,31 +13,26 @@ module Messaging
     end
     
     class Publisher < Disposable
-        @channel : AMQP::Channel?
-        def initialize(@connection : AMQP::Connection)
+        @channel : AMQP::Channel
+        @exchange : AMQP::Exchange
+        def initialize(@connection : AMQP::Connection, @router : String, @key : String, type = "topic")
+            @channel = @connection.channel
+            @exchange = @channel.exchange("#{AMQP_PREFIX}#{@router}", type)
             Messaging.append_disposable(self)
         end
 
-        def publish(data : String, router : String, key : String, type = "topic")
-            ch = @channel = @connection.channel
-
-            message = AMQP::Message.new(data)
-            
-            exchange = ch.exchange("#{AMQP_PREFIX}#{router}", type)
-            exchange.publish(message, "#{AMQP_PREFIX}#{key}")
+        def publish(data)
+            @exchange.publish(AMQP::Message.new(data), "#{AMQP_PREFIX}#{@key}")
         end
 
         def dispose
-            ch = @channel
-            if (ch.is_a? AMQP::Channel)
-                ch.close
-            end
+            @channel.close
         end
     end
     
     class Subscriber < Disposable
         @unbind = true
-        @channel : AMQP::Channel?
+        @channel : AMQP::Channel
         @queue : AMQP::Queue?
         @exchange : AMQP::Exchange?
         def initialize(
@@ -46,11 +41,12 @@ module Messaging
             @key : String,
             @type = "topic"
         )
+            @channel = @connection.channel
             Messaging.append_disposable(self)
         end
 
         def queue(durable = false, passive = false, exclusive = false, auto_delete = false)
-            ch = @channel = @connection.channel
+            ch = @channel #= @connection.channel
 
             ex = @exchange = ch.exchange("#{AMQP_PREFIX}#{@router}", @type)
             name = "#{AMQP_PREFIX}#{@key}"
@@ -76,11 +72,8 @@ module Messaging
             if (@unbind && q.is_a? AMQP::Queue && ex.is_a? AMQP::Exchange)
                 q.unbind(ex, q.name)
             end
-            ch = @channel
-            if (ch.is_a? AMQP::Channel)
-                ch.close
-            end
         ensure
+            @channel.close
             @queue = nil
         end
     end
