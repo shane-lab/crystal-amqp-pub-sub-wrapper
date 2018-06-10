@@ -1,6 +1,8 @@
 require "amqp"
 require "signal"
 
+# automatically set a prefix on the exchanges and named queues
+# ENV["AMQP_PREFIX"] = ENV["AMQP_PREFIX"] ||= "my-app"
 require "../src/amqp-pub-sub"
 
 AMQP::Connection.start(AMQP::Config.new(
@@ -14,25 +16,26 @@ AMQP::Connection.start(AMQP::Config.new(
     puts "connection to the AMQP server closed: #{code} - #{msg}"
   end
 
-  publisher = Messaging::Publisher.new(conn)
+  publisherWarning = Messaging::Publisher.new(conn, "direct_logs", "warning", "direct")
+  publisherError = Messaging::Publisher.new(conn, "direct_logs", "error", "direct")
 
-  subscriber = Messaging::Subscriber.new(conn, "direct_logs", "warning", "direct")
-  subscriber.queue(exclusive: true, auto_delete: true).subscribe do |msg|
+  subscriberWarning = Messaging::Subscriber.new(conn, "direct_logs", "warning", "direct")
+  subscriberWarning.queue(exclusive: true, auto_delete: true).subscribe do |msg|
     puts "received: #{msg.to_s}"
     msg.ack
   end
-  subscriber1 = Messaging::Subscriber.new(conn, "direct_logs", "error", "direct")
-  subscriber1.queue(exclusive: true, auto_delete: true).subscribe do |msg|
+  subscriberError = Messaging::Subscriber.new(conn, "direct_logs", "error", "direct")
+  subscriberError.queue(exclusive: true, auto_delete: true).subscribe do |msg|
     puts "received: #{msg.to_s}"
     msg.ack
   end
 
   10.times do |i| 
-    publisher.publish("{\"type\": \"warning\", \"id\": #{i + 1}}", "direct_logs", "warning", "direct")
-    publisher.publish("{\"type\": \"error\", \"id\": #{i + 1}}", "direct_logs", "error", "direct")
+    publisherWarning.publish("{\"type\": \"warning\", \"id\": #{i + 1}}")
+    publisherError.publish("{\"type\": \"error\", \"id\": #{i + 1}}")
   end
 
-  puts "program finished. exit with CTRL ^C"
+  puts "exit the program with CTRL ^C"
   Signal::INT.trap do
     puts "\nexiting..."
     conn.loop_break

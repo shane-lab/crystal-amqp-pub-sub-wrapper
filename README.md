@@ -17,7 +17,7 @@ Add this to your application's `shard.yml`:
 ```yml
 dependencies:
   amqp-pub-sub:
-    github: shane-lab/crystal-amqp-pub-sub-wrapper.cr
+    github: shane-lab/crystal-amqp-pub-sub-wrapper
 ```
 
 # Usage

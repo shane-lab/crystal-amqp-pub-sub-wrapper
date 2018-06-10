@@ -2,8 +2,8 @@ require "amqp"
 
 require "./disposable"
 
-ENV["AMQP_PREFIX"] = ENV["AMQP_PREFIX"] ||= nil
-AMQP_PREFIX = ENV["AMQP_PREFIX"] ? "#{ENV["AMQP_PREFIX"]}." : ""
+ENV_AMQP_PREFIX = ENV["AMQP_PREFIX"] ||= nil
+AMQP_PREFIX = ENV_AMQP_PREFIX ? "#{ENV["AMQP_PREFIX"]}." : ""
 
 module Messaging
     @@disposables = Set(Disposable).new
