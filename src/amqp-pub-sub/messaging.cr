@@ -2,7 +2,8 @@ require "amqp"
 
 require "./disposable"
 
-AMQP_PREFIX = ENV["AQMP_PREFIX"] ||= nil
+AMQP_PREFIX = ENV["AMQP_PREFIX"] ||= nil
+AMQP_PREFIX = AMQP_PREFIX ? "#{AMQP_PREFIX}." : ""
 
 module Messaging
     @@disposables = Set(Disposable).new
@@ -22,8 +23,8 @@ module Messaging
 
             message = AMQP::Message.new(data)
             
-            exchange = ch.exchange("#{AMQP_PREFIX}.#{router}", type)
-            exchange.publish(message, "#{AMQP_PREFIX}.#{key}")
+            exchange = ch.exchange("#{AMQP_PREFIX}#{router}", type)
+            exchange.publish(message, "#{AMQP_PREFIX}#{key}")
         end
 
         def dispose
@@ -51,8 +52,8 @@ module Messaging
         def queue(durable = false, passive = false, exclusive = false, auto_delete = false)
             ch = @channel = @connection.channel
 
-            ex = @exchange = ch.exchange("#{AMQP_PREFIX}.#{@router}", @type)
-            name = "#{AMQP_PREFIX}.#{@key}"
+            ex = @exchange = ch.exchange("#{AMQP_PREFIX}#{@router}", @type)
+            name = "#{AMQP_PREFIX}#{@key}"
             q = @queue = ch.queue(
                 name: exclusive ? "" : name,
                 durable: durable,

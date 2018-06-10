@@ -1,5 +1,5 @@
 name: amqp-pub-sub
-version: 0.1.0
+version: 0.1.1
 
 description: |
   A pub/sub wrapper module for the AMQP 0.9.1 client library by datanoise
