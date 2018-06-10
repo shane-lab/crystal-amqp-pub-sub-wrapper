@@ -1,0 +1,13 @@
+.crystal
+.git
+.idea
+.vscode
+
+build/
+out/
+cmake-build-*/
+coverage/
+
+.shards
+lib/
+bin/

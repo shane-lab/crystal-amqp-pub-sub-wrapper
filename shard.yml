@@ -1,0 +1,12 @@
+name: amqp-pub-sub
+version: 0.1.0
+
+description: |
+  A pub/sub wrapper module for the AMQP 0.9.1 client library by datanoise
+
+crystal: 0.20.0
+license: MIT
+
+dependencies:
+  amqp:
+    github: datanoise/amqp.cr
