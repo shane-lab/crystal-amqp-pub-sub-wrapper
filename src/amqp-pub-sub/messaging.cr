@@ -15,9 +15,17 @@ module Messaging
     class Publisher < Disposable
         @channel : AMQP::Channel
         @exchange : AMQP::Exchange
-        def initialize(@connection : AMQP::Connection, @router : String, @key : String, type = "topic")
+        def initialize(@connection : AMQP::Connection, @router : String, @key : String, type = "topic", durable = false, passive = false, no_wait = false, internal = false, auto_delete = false, args = AMQP::Protocol::Table.new)
             @channel = @connection.channel
-            @exchange = @channel.exchange("#{AMQP_PREFIX}#{@router}", type)
+            @exchange = @channel.exchange(
+                name: "#{AMQP_PREFIX}#{@router}", 
+                kind: type, 
+                args: args,
+                durable: durable,
+                internal: internal,
+                no_wait: no_wait,
+                auto_delete: auto_delete
+            )
             Messaging.append_disposable(self)
         end
 
