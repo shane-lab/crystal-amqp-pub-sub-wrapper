@@ -21,8 +21,8 @@ module Messaging
             Messaging.append_disposable(self)
         end
 
-        def publish(data)
-            @exchange.publish(AMQP::Message.new(data), "#{AMQP_PREFIX}#{@key}")
+        def publish(data : String, properties = AMQP::Protocol::Properties.new)
+            @exchange.publish(AMQP::Message.new(data, properties), "#{AMQP_PREFIX}#{@key}")
         end
 
         def dispose
